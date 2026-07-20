@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chef's Challenge — Server</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #FFF8F0;
+      color: #2C1A0E;
+      display: flex;
+      justify-content: center;
+      padding: 48px 16px;
+    }
+    .card {
+      background: #fff;
+      border: 2px solid #F0A500;
+      border-radius: 12px;
+      padding: 40px 48px;
+      max-width: 680px;
+      width: 100%;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    h1 { font-size: 2rem; color: #E05C2D; margin-bottom: 4px; }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 12px 0 28px;
+      font-size: 0.95rem;
+      color: #2E7D32;
+      font-weight: 600;
+    }
+    .dot {
+      width: 10px; height: 10px;
+      background: #2E7D32;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+    h2 { font-size: 1rem; color: #E05C2D; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .endpoint {
+      border: 1px solid #F0E8DC;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .endpoint-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: #FDE8CC;
+    }
+    .route { font-family: monospace; font-size: 0.88rem; }
+    .method {
+      display: inline-block;
+      background: #E05C2D;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      margin-right: 8px;
+      font-family: monospace;
+    }
+    .desc { padding: 8px 14px; font-size: 0.88rem; color: #5D4037; }
+    .try-btn {
+      background: #E05C2D;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .try-btn:hover { background: #c94e24; }
+    .try-btn:disabled { background: #ccc; cursor: default; }
+    .response-box {
+      background: #1E1E1E;
+      color: #D4D4D4;
+      font-family: monospace;
+      font-size: 0.82rem;
+      padding: 12px 14px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      display: none;
+      border-top: 1px solid #333;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .response-box.visible { display: block; }
+    .response-box.error { color: #F48771; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 28px; font-size: 0.9rem; }
+    th { text-align: left; padding: 6px 10px; background: #FDE8CC; color: #2C1A0E; }
+    td { padding: 8px 10px; border-bottom: 1px solid #F0E8DC; }
+    .note {
+      background: #FFF3E0;
+      border-left: 4px solid #F0A500;
+      padding: 12px 16px;
+      border-radius: 4px;
+      font-size: 0.88rem;
+      color: #5D4037;
+      margin-top: 8px;
+    }
+    #session-id-row {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+    }
+    #session-id-row.visible { display: flex; }
+    #session-id-display {
+      font-family: monospace;
+      background: #F0E8DC;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🍳 Chef's Challenge</h1>
+    <div class="status"><div class="dot"></div> Server is running on port 8080</div>
+
+    <h2>Try the API</h2>
+
+    <div id="session-id-row">
+      <strong>Session ID:</strong>
+      <span id="session-id-display"></span>
+    </div>
+
+    <!-- /start -->
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="route"><span class="method">POST</span>/api/session/start</span>
+        <button class="try-btn" onclick="tryStart()">Try it</button>
+      </div>
+      <div class="desc">Start a new game session. Returns the first dish and a session ID.</div>
+      <pre class="response-box" id="res-start"></pre>
+    </div>
+
+    <!-- /hint -->
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="route"><span class="method">POST</span>/api/session/{id}/hint</span>
+        <button class="try-btn" id="btn-hint" onclick="tryHint()" disabled>Try it</button>
+      </div>
+      <div class="desc">Reveal a random ingredient hint. Costs 10 pts. (Start a session first.)</div>
+      <pre class="response-box" id="res-hint"></pre>
+    </div>
+
+    <!-- /submit -->
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="route"><span class="method">POST</span>/api/session/{id}/submit</span>
+        <button class="try-btn" id="btn-submit" onclick="trySubmit()" disabled>Try it</button>
+      </div>
+      <div class="desc">Submit a sample answer (Pizza Dough + Tomato Sauce, BAKE). (Start a session first.)</div>
+      <pre class="response-box" id="res-submit"></pre>
+    </div>
+
+    <!-- /timeout -->
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="route"><span class="method">POST</span>/api/session/{id}/timeout</span>
+        <button class="try-btn" id="btn-timeout" onclick="tryTimeout()" disabled>Try it</button>
+      </div>
+      <div class="desc">Simulate a timeout for the current dish. (Start a session first.)</div>
+      <pre class="response-box" id="res-timeout"></pre>
+    </div>
+
+    <br>
+    <h2>Scoring</h2>
+    <table>
+      <thead><tr><th>Tier</th><th>Similarity</th><th>Points</th></tr></thead>
+      <tbody>
+        <tr><td>PERFECT</td><td>≥ 90%</td><td>+100</td></tr>
+        <tr><td>GOOD</td><td>≥ 60%</td><td>+50</td></tr>
+        <tr><td>BAD</td><td>≥ 30%</td><td>0</td></tr>
+        <tr><td>TERRIBLE</td><td>&lt; 30%</td><td>−30</td></tr>
+        <tr><td>TIMEOUT</td><td>—</td><td>0</td></tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      To play the full game, launch the Java Swing client. It connects to this server on <strong>localhost:8080</strong> automatically.
+    </div>
+  </div>
+
+  <script>
+    let sessionId = null;
+
+    function show(id, json, isError) {
+      const el = document.getElementById(id);
+      el.textContent = JSON.stringify(json, null, 2);
+      el.className = 'response-box visible' + (isError ? ' error' : '');
+    }
+
+    function enableSessionButtons() {
+      document.getElementById('btn-hint').disabled    = false;
+      document.getElementById('btn-submit').disabled  = false;
+      document.getElementById('btn-timeout').disabled = false;
+      const row = document.getElementById('session-id-row');
+      row.classList.add('visible');
+      document.getElementById('session-id-display').textContent = sessionId;
+    }
+
+    async function post(url, body) {
+      const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' } };
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(url, opts);
+      const text = await res.text();
+      try { return { ok: res.ok, data: JSON.parse(text) }; }
+      catch { return { ok: false, data: { error: text } }; }
+    }
+
+    async function tryStart() {
+      const { ok, data } = await post('/api/session/start');
+      show('res-start', data, !ok);
+      if (ok && data.sessionId) {
+        sessionId = data.sessionId;
+        enableSessionButtons();
+      }
+    }
+
+    async function tryHint() {
+      if (!sessionId) return;
+      const { ok, data } = await post(`/api/session/${sessionId}/hint`, { hintType: 'INGREDIENT' });
+      show('res-hint', data, !ok);
+    }
+
+    async function trySubmit() {
+      if (!sessionId) return;
+      const { ok, data } = await post(`/api/session/${sessionId}/submit`, {
+        ingredients: ['Pizza Dough', 'Tomato Sauce'],
+        techniques:  ['BAKE']
+      });
+      show('res-submit', data, !ok);
+      if (ok && data.sessionOver === false) {
+        // session advanced, keep same sessionId
+      }
+    }
+
+    async function tryTimeout() {
+      if (!sessionId) return;
+      const { ok, data } = await post(`/api/session/${sessionId}/timeout`);
+      show('res-timeout', data, !ok);
+    }
+  </script>
+</body>
+</html>
