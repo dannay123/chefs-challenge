@@ -1,0 +1,20 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+group = 'com.chefchallenge'
+version = '1.0.0'
+java { sourceCompatibility = JavaVersion.VERSION_11 }
+repositories { mavenCentral() }
+dependencies {
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+}
+application {
+    mainClass = 'com.chefchallenge.client.ChefChallengeClientApplication'
+}
+jar {
+    archiveFileName = 'chefs-challenge-client.jar'
+    manifest { attributes 'Main-Class': 'com.chefchallenge.client.ChefChallengeClientApplication' }
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
