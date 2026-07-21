@@ -207,4 +207,4 @@ Being straight about this instead of burying it:
 
 ## Credits
 
-Built by Dannay for CS 220: Applied Data Structures, Knox College (Spring 2026) — Jaime Spacco & Jurdana Masuma Iqrah. Designed through negotiation with Claude, implemented by Claude Code.
+Built by Danny for CS 220: Applied Data Structures, Knox College (Spring 2026) — Jaime Spacco & Jurdana Masuma Iqrah. Designed through negotiation with Claude, implemented by Danny.
